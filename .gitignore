@@ -1,0 +1,6 @@
+﻿.env
+post_cache/
+instruction.txt
+database.txt
+.htaccess
+test.html

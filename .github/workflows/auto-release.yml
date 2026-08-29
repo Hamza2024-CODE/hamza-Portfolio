@@ -1,0 +1,20 @@
+name: Release Drafter
+
+on:
+  push:
+    branches:
+      - main # Triggers whenever you push changes to main
+
+permissions:
+  contents: write
+
+jobs:
+  update_release_draft:
+    permissions:
+      contents: write  # Allows the action to create tags/releases
+      pull-requests: write  # Allows tracking of pull requests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: release-drafter/release-drafter@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
