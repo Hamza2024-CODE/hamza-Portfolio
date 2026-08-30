@@ -1,6 +1,6 @@
 <?php
 // Automatic Environment Detection (XAMPP Localhost vs InfinityFree Hosting)
-$is_local = (in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1']) || ($_SERVER['SERVER_NAME'] ?? '') === 'localhost');
+$is_local = (in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1']) || strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false);
 
 if ($is_local) {
     $db_host = 'localhost';

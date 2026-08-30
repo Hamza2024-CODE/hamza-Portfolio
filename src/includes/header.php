@@ -3,12 +3,17 @@
 $current_page = basename($_SERVER['PHP_SELF']);
 
 // Calculate dynamic base path to support both subdirectories (XAMPP) and production domain root
-$script_name = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '/index.php');
-$base_dir = str_replace('\\', '/', dirname($script_name));
-if (($pos = strpos($base_dir, '/public')) !== false) {
-    $base_dir = substr($base_dir, 0, $pos);
+
+// Calculate dynamic base path to support both subdirectories (XAMPP) and production domain root
+$base_path = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+
+// Strip out the '/public' directory and anything after it to get the true application root
+if (($pos = strpos($base_path, '/public')) !== false) {
+    $base_path = substr($base_path, 0, $pos);
 }
-$base_path = ($base_dir === '' || $base_dir === '.' || $base_dir === '/') ? '/' : rtrim($base_dir, '/') . '/';
+
+// Ensure the path always ends with a single trailing slash
+$base_path = rtrim($base_path, '/') . '/';
 
 // Ensure database connectivity for dynamic settings
 if (!isset($pdo)) {
@@ -215,10 +220,7 @@ if ($is_spa) {
             document.addEventListener('DOMContentLoaded', updateThemeIcons);
         </script>
 
-        <!-- Tailwind CSS & Custom Styles -->
         <script src="https://cdn.tailwindcss.com"></script>
-        <link rel="stylesheet" href="<?php echo $base_path; ?>assets/css/style.css?v=2.6">
-        <link rel="stylesheet" href="<?php echo $base_path; ?>public/assets/css/style.css?v=2.6">
 
         <!-- Custom Tailwind Configuration -->
         <script>
@@ -356,7 +358,7 @@ if ($is_spa) {
 
                 <!-- Logo pill -->
                 <div id="logo-pill" class="flex-shrink-0 flex items-center rounded-full px-5 py-2">
-                    <a href="<?php echo $base_path; ?>" data-ar="<?php echo htmlspecialchars($site_name_ar); ?>" data-en="<?php echo htmlspecialchars($site_name_en); ?>"
+                    <a href="" data-ar="<?php echo htmlspecialchars($site_name_ar); ?>" data-en="<?php echo htmlspecialchars($site_name_en); ?>"
                         class="font-headline font-bold text-gray-900 dark:text-white text-base sm:text-lg tracking-wide transition-colors">
                         <?php echo htmlspecialchars($site_name_ar); ?>
                     </a>
@@ -365,16 +367,16 @@ if ($is_spa) {
                 <!-- Desktop Nav Links -->
                 <nav
                     class="hidden md:flex items-center space-x-1 lg:space-x-2 rtl:space-x-reverse bg-white/40 dark:bg-neutral-900/40 backdrop-blur-md border border-gray-200/40 dark:border-neutral-800/40 shadow-md rounded-full px-6 py-2 transition-colors duration-300">
-                    <a href="<?php echo $base_path; ?>about" data-ar="عن حمزة" data-en="About"
+                    <a href="about" data-ar="عن حمزة" data-en="About"
                         class="px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 <?php echo ($current_page == 'about.php') ? 'text-brandPrimary font-semibold' : 'text-gray-600 dark:text-gray-400 hover:text-brandPrimary'; ?>">About</a>
 
-                    <a href="<?php echo $base_path; ?>projects" data-ar="المشاريع" data-en="Projects"
+                    <a href="projects" data-ar="المشاريع" data-en="Projects"
                         class="px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 <?php echo ($current_page == 'projects.php') ? 'text-brandPrimary font-semibold' : 'text-gray-600 dark:text-gray-400 hover:text-brandPrimary'; ?>">Projects</a>
 
-                    <a href="<?php echo $base_path; ?>articles" data-ar="المقالات" data-en="Articles"
+                    <a href="articles" data-ar="المقالات" data-en="Articles"
                         class="px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 <?php echo ($current_page == 'articles.php') ? 'text-brandPrimary font-semibold' : 'text-gray-600 dark:text-gray-400 hover:text-brandPrimary'; ?>">Articles</a>
 
-                    <a href="<?php echo $base_path; ?>tools/" data-ar="الأدوات" data-en="Tools"
+                    <a href="tools/" data-ar="الأدوات" data-en="Tools"
                         class="px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 <?php echo (strpos($current_page, 'tools') !== false) ? 'text-brandPrimary font-semibold' : 'text-gray-600 dark:text-gray-400 hover:text-brandPrimary'; ?>">Tools</a>
                 </nav>
 
@@ -422,13 +424,13 @@ if ($is_spa) {
             <div id="mobile-menu"
                 class="hidden md:hidden mt-2 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border border-gray-200 dark:border-neutral-800 rounded-2xl w-full shadow-xl overflow-hidden transition-all">
                 <div class="px-4 py-4 space-y-1">
-                    <a href="<?php echo $base_path; ?>about" data-ar="عن حمزة" data-en="About"
+                    <a href="about" data-ar="عن حمزة" data-en="About"
                         class="block <?php echo ($current_page == 'about.php') ? 'text-brandPrimary bg-gray-100 dark:bg-white/5 font-semibold' : 'text-gray-600 dark:text-gray-400'; ?> text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">About</a>
-                    <a href="<?php echo $base_path; ?>projects" data-ar="المشاريع" data-en="Projects"
+                    <a href="projects" data-ar="المشاريع" data-en="Projects"
                         class="block <?php echo ($current_page == 'projects.php') ? 'text-brandPrimary bg-gray-100 dark:bg-white/5 font-semibold' : 'text-gray-600 dark:text-gray-400'; ?> text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">Projects</a>
-                    <a href="<?php echo $base_path; ?>articles" data-ar="المقالات" data-en="Articles"
+                    <a href="articles" data-ar="المقالات" data-en="Articles"
                         class="block <?php echo ($current_page == 'articles.php') ? 'text-brandPrimary bg-gray-100 dark:bg-white/5 font-semibold' : 'text-gray-600 dark:text-gray-400'; ?> text-sm font-medium py-2.5 px-4 rounded-xl transition-colors">Articles</a>
-                    <a href="<?php echo $base_path; ?>tools/" data-ar="الأدوات" data-en="Tools"
+                    <a href="tools/" data-ar="الأدوات" data-en="Tools"
                         class="block <?php echo (strpos($current_page, 'tools') !== false) ? 'text-brandPrimary bg-gray-100 dark:bg-white/5 font-semibold' : 'text-gray-600 dark:text-gray-400'; ?> text-sm font-medium py-2.5 px-4 rounded-xl transition-colors">Tools</a>
                 </div>
             </div>

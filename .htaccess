@@ -1,14 +1,20 @@
+Options +FollowSymLinks -Indexes
 RewriteEngine On
 
-# Universal Asset Rewriting for hosting compatibility
-RewriteRule ^assets/(.*)$ public/assets/$1 [L]
-RewriteRule ^public/assets/(.*)$ public/assets/$1 [L]
+# Disable Apache's automatic physical trailing slash redirects for directories
+DirectorySlash Off
 
-# Route PWA manifest and service worker
+# Pass-through for real existing files or directories
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Explicit Service Worker, Manifest, and Assets
 RewriteRule ^sw\.js$ public/sw.js [L]
 RewriteRule ^manifest\.json$ public/manifest.json [L]
+RewriteRule ^assets/(.*)$ public/assets/$1 [L]
 
-# Route Clean URLs
+# Clean URL Routing
 RewriteRule ^admin/?$ public/admin.php [L,QSA]
 RewriteRule ^admin\.php$ public/admin.php [L,QSA]
 RewriteRule ^about/?$ public/about.php [L,QSA]
@@ -22,7 +28,10 @@ RewriteRule ^tools/php_syllabus/?$ public/tools/php_syllabus.php [L,QSA]
 RewriteRule ^tools/omr_evaluator/?$ public/tools/omr_evaluator.php [L,QSA]
 RewriteRule ^tools/(.*)$ public/tools/$1 [L,QSA]
 
-# Fallback for routing clean request paths
+# Route root URL to public/index.php
+RewriteRule ^$ public/index.php [L]
+
+# General fallback to public/index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ public/index.php [L,QSA]
+RewriteRule ^(.*)$ public/index.php?/$1 [L,QSA]

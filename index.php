@@ -1,7 +1,6 @@
 <?php
 /**
- * Main Entry Point for Production Hosting (InfinityFree / Apache / Nginx)
- * Directs traffic seamlessly to public/index.php
+ * Main Application Entry Point
+ * Handles root routing for both local XAMPP and production web hosting (InfinityFree / cPanel).
  */
 require_once __DIR__ . '/public/index.php';
-?>
