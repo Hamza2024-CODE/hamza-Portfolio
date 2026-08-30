@@ -10,8 +10,8 @@ $pageMeta  = [
     'jsonld_type'  => 'Person',
     'jsonld_article' => null,
 ];
-include '../src/includes/header.php';
-require __DIR__ . '/../config/dbconfig.php';
+require_once __DIR__ . '/../src/includes/header.php';
+require_once __DIR__ . '/../config/dbconfig.php';
 require_once __DIR__ . '/../src/backend/blogger_post_handler.php';
 
 $endpoint = "posts?maxResults=10&";
@@ -555,4 +555,4 @@ try {
 </div>
 </div>
 
-<?php include '../src/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../src/includes/footer.php'; ?>
