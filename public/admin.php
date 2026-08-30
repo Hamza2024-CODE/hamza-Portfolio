@@ -3,19 +3,33 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Database Connectivity Settings
-$db_host = 'localhost';
-$db_user = 'root';
-$db_pass = '';
-$db_name = 'portfolio_db';
+// Database Connectivity Settings via dbconfig
+$db_config_file = __DIR__ . '/../config/dbconfig.php';
+if (file_exists($db_config_file)) {
+    require_once $db_config_file;
+}
 
-try {
-    $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-    ]);
-} catch (PDOException $e) {
-    die("<p style='color:red;'>Database connection failed: " . htmlspecialchars($e->getMessage()) . "</p>");
+if (!isset($pdo)) {
+    $is_local = (in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1']) || strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false);
+    if ($is_local) {
+        $db_host = '127.0.0.1';
+        $db_user = 'root';
+        $db_pass = '';
+        $db_name = 'portfolio_db';
+    } else {
+        $db_host = 'sql306.infinityfree.com';
+        $db_user = 'if0_41712671';
+        $db_pass = 'mx9cnfa7YhJ4W';
+        $db_name = 'if0_41712671_portfolio';
+    }
+    try {
+        $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+        ]);
+    } catch (PDOException $e) {
+        die("<div style='font-family:sans-serif;padding:20px;background:#fee2e2;color:#991b1b;border-radius:12px;'><h3>خطأ في الاتصال بقاعدة البيانات / Database Connection Failure</h3><p>" . htmlspecialchars($e->getMessage()) . "</p></div>");
+    }
 }
 
 // Handle Logout Action
@@ -26,7 +40,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     exit;
 }
 
-// Handle Login Form Submission
 $error = '';
 $success = '';
 
@@ -34,12 +47,13 @@ if (isset($_GET['logged_out'])) {
     $success = "تم تسجيل الخروج بنجاح من لوحة التحكم.";
 }
 
+// Handle Login Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submit'])) {
     $user = trim($_POST['username'] ?? '');
     $pass = trim($_POST['password'] ?? '');
     if ($user === 'admin' && $pass === 'admin') {
         $_SESSION['admin_logged_in'] = true;
-        $success = "تم تسحيل الدخول بنجاح!";
+        $success = "تم تسجيل الدخول بنجاح!";
     } else {
         $error = "اسم المستخدم أو كلمة السر غير صحيحة.";
     }
@@ -51,15 +65,59 @@ if (!isset($_SESSION['admin_logged_in']) && !isset($_GET['logged_out'])) {
 }
 $is_logged_in = $_SESSION['admin_logged_in'] ?? false;
 
-// Handle Profile & System Settings Submissions
+// Image Upload Helper Function
+function handleImageUpload($file_input_name, $target_subfolder = 'assets/images/') {
+    if (!isset($_FILES[$file_input_name]) || $_FILES[$file_input_name]['error'] !== UPLOAD_ERR_OK) {
+        return null;
+    }
+    
+    $file = $_FILES[$file_input_name];
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'];
+    
+    if (!in_array($ext, $allowed)) {
+        return null;
+    }
+    
+    $target_dir = __DIR__ . '/' . trim($target_subfolder, '/') . '/';
+    if (!is_dir($target_dir)) {
+        @mkdir($target_dir, 0755, true);
+    }
+    
+    $new_filename = 'upload_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
+    $target_file = $target_dir . $new_filename;
+    
+    if (move_uploaded_file($file['tmp_name'], $target_file)) {
+        return 'assets/images/' . $new_filename;
+    }
+    
+    return null;
+}
+
+// Handle Profile & System Settings Submissions (with image upload)
 if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['settings_submit'])) {
     if (isset($_POST['settings']) && is_array($_POST['settings'])) {
         foreach ($_POST['settings'] as $key => $val) {
             $stmt = $pdo->prepare("INSERT INTO settings (key_name, key_value) VALUES (:k, :v) ON DUPLICATE KEY UPDATE key_value = :v");
             $stmt->execute([':k' => $key, ':v' => trim($val)]);
         }
-        $success = "تم حفظ البيانات والمعلومات الشخصية بنجاح في قاعدة البيانات!";
     }
+    
+    // Handle Profile Avatar Upload
+    $avatar_path = handleImageUpload('profile_avatar');
+    if ($avatar_path) {
+        $stmt = $pdo->prepare("INSERT INTO settings (key_name, key_value) VALUES ('site_avatar', :v) ON DUPLICATE KEY UPDATE key_value = :v");
+        $stmt->execute([':v' => $avatar_path]);
+    }
+
+    // Handle Hero Background Image Upload
+    $hero_path = handleImageUpload('hero_bg');
+    if ($hero_path) {
+        $stmt = $pdo->prepare("INSERT INTO settings (key_name, key_value) VALUES ('site_hero_bg', :v) ON DUPLICATE KEY UPDATE key_value = :v");
+        $stmt->execute([':v' => $hero_path]);
+    }
+
+    $success = "تم حفظ البيانات والمعلومات الشخصية والصور بنجاح!";
 }
 
 // Handle Article Form Submissions (Create & Update)
@@ -70,16 +128,22 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['arti
     $art_content = trim($_POST['art_content'] ?? '');
     $art_date = $_POST['art_date'] ?? date('Y-m-d');
     $art_id = $_POST['article_id'] ?? '';
+    $art_image = trim($_POST['art_image_url'] ?? '');
+
+    $uploaded_image = handleImageUpload('art_image_file');
+    if ($uploaded_image) {
+        $art_image = $uploaded_image;
+    }
 
     if (!empty($art_title) && !empty($art_summary)) {
         if (!empty($art_id)) {
-            $stmt = $pdo->prepare("UPDATE articles SET title = :t, slug = :s, summary = :sum, content = :c, publish_date = :d WHERE id = :id");
-            $stmt->execute([':t' => $art_title, ':s' => $art_slug, ':sum' => $art_summary, ':c' => $art_content, ':d' => $art_date, ':id' => $art_id]);
-            $success = "تم تحديث المقال البرمجي بنجاح!";
+            $stmt = $pdo->prepare("UPDATE articles SET title = :t, slug = :s, summary = :sum, content = :c, publish_date = :d, media_image = :img WHERE id = :id");
+            $stmt->execute([':t' => $art_title, ':s' => $art_slug, ':sum' => $art_summary, ':c' => $art_content, ':d' => $art_date, ':img' => $art_image, ':id' => $art_id]);
+            $success = "تم تحديث المقال والصورة بنجاح!";
         } else {
-            $stmt = $pdo->prepare("INSERT INTO articles (title, slug, summary, content, publish_date) VALUES (:t, :s, :sum, :c, :d)");
-            $stmt->execute([':t' => $art_title, ':s' => $art_slug, ':sum' => $art_summary, ':c' => $art_content, ':d' => $art_date]);
-            $success = "تمت إضافة المقال البرمجي الجديد بنجاح!";
+            $stmt = $pdo->prepare("INSERT INTO articles (title, slug, summary, content, publish_date, media_image) VALUES (:t, :s, :sum, :c, :d, :img)");
+            $stmt->execute([':t' => $art_title, ':s' => $art_slug, ':sum' => $art_summary, ':c' => $art_content, ':d' => $art_date, ':img' => $art_image]);
+            $success = "تمت إضافة المقال البرمجي الجديد والصورة بنجاح!";
         }
     } else {
         $error = "يرجى ملء جميع الحقول المطلوبة للمقال.";
@@ -114,6 +178,12 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['proj
     $is_featured = isset($_POST['is_featured']) ? 1 : 0;
     $project_id = $_POST['project_id'] ?? '';
 
+    // Handle Project Image File Upload
+    $uploaded_proj_image = handleImageUpload('project_media_file');
+    if ($uploaded_proj_image) {
+        $project_media = $uploaded_proj_image;
+    }
+
     if (empty($title) || empty($description) || empty($languages_used)) {
         $error = 'يرجى ملء جميع الحقول الأساسية المطلوبة (عنوان المشروع، الوصف، والتقنيات البرمجية).';
     } else {
@@ -137,7 +207,7 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['proj
                     ':date_started' => $date_started, ':date_finished' => $date_finished,
                     ':is_featured' => $is_featured, ':id' => $project_id
                 ]);
-                $success = "تم تحديث بيانات المشروع بنجاح!";
+                $success = "تم تحديث بيانات وصورة المشروع بنجاح!";
             } else {
                 $sql = "INSERT INTO projects (title, category, description, key_contribution, conclusion, languages_used, project_media, github_link, live_demo_link, date_started, date_finished, is_featured) 
                         VALUES (:title, :category, :description, :key_contribution, :conclusion, :languages_used, :project_media, :github_link, :live_demo_link, :date_started, :date_finished, :is_featured)";
@@ -151,7 +221,7 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['proj
                     ':date_started' => $date_started, ':date_finished' => $date_finished,
                     ':is_featured' => $is_featured
                 ]);
-                $success = "تمت إضافة المشروع الجديد بنجاح!";
+                $success = "تمت إضافة المشروع الجديد وصورته بنجاح!";
             }
         } catch (PDOException $e) {
             $error = "حدث خطأ أثناء حفظ البيانات: " . $e->getMessage();
@@ -211,7 +281,7 @@ foreach ($projects as $p) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مركز الإدارة والتكئية المؤسسية — حمزة بوبكر الصديق</title>
+    <title>مركز الإدارة الشاملة والرفع الرقمي — حمزة بوبكر الصديق</title>
     
     <!-- Google Fonts Cairo & Alexandria -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&family=Alexandria:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
@@ -253,10 +323,10 @@ foreach ($projects as $p) {
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <div class="w-10 h-10 rounded-2xl bg-teal-600 flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-teal-600/30">
-                    <i class="fas fa-[#009688] fa-user-shield"></i>
+                    <i class="fas fa-sliders-h"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold text-slate-900 dark:text-white tracking-wide" data-ar="مركز التكئية والإدارة الشاملة للمنصة" data-en="Platform Control & Settings Center">مركز التكئية والإدارة الشاملة للمنصة</h1>
+                    <h1 class="text-lg font-bold text-slate-900 dark:text-white tracking-wide" data-ar="مركز التكئية والإدارة الشاملة والرفع الرقمي" data-en="Platform Control & Upload Center">مركز التكئية والإدارة الشاملة والرفع الرقمي</h1>
                     <p class="text-xs text-teal-600 dark:text-teal-400" data-ar="حمزة بوبكر الصديق — وزارة التكوين والتعليم المهنيين" data-en="Hamza Boubakar Seddik — MFEP Algeria">حمزة بوبكر الصديق — وزارة التكوين والتعليم المهنيين</p>
                 </div>
             </div>
@@ -272,7 +342,7 @@ foreach ($projects as $p) {
                     <i id="admin-theme-icon" class="fas fa-sun text-amber-400"></i>
                 </button>
 
-                <a href="../" target="_blank" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-md transition-all">
+                <a href="./" target="_blank" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-md transition-all">
                     <i class="fas fa-external-link-alt"></i> <span data-ar="المنصة العامة" data-en="Public Site">المنصة العامة</span>
                 </a>
 
@@ -335,13 +405,13 @@ foreach ($projects as $p) {
                 <i class="fas fa-chart-pie"></i> <span data-ar="نظرة عامة وإحصائيات" data-en="Overview & Metrics">نظرة عامة وإحصائيات</span>
             </button>
             <button onclick="switchTab('projects-tab')" id="btn-projects-tab" type="button" class="tab-btn px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 transition-all cursor-pointer">
-                <i class="fas fa-folder-open"></i> <span data-ar="إدارة المشاريع المؤسسية" data-en="Projects Management">إدارة المشاريع المؤسسية</span>
+                <i class="fas fa-folder-open"></i> <span data-ar="إدارة المشاريع والصور" data-en="Projects & Images">إدارة المشاريع والصور</span>
             </button>
             <button onclick="switchTab('profile-tab')" id="btn-profile-tab" type="button" class="tab-btn px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 transition-all cursor-pointer">
-                <i class="fas fa-user-cog"></i> <span data-ar="بيانات البروفايل والشخصية" data-en="Profile & Bio Settings">بيانات البروفايل والشخصية</span>
+                <i class="fas fa-user-cog"></i> <span data-ar="البروفايل والصور الشخصية" data-en="Profile & Bio Settings">البروفايل والصور الشخصية</span>
             </button>
             <button onclick="switchTab('articles-tab')" id="btn-articles-tab" type="button" class="tab-btn px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 transition-all cursor-pointer">
-                <i class="fas fa-newspaper"></i> <span data-ar="المقالات والأبحاث البرمجية" data-en="Articles & Papers">المقالات والأبحاث البرمجية</span>
+                <i class="fas fa-newspaper"></i> <span data-ar="المقالات والأبحاث" data-en="Articles & Papers">المقالات والأبحاث</span>
             </button>
             <button onclick="switchTab('tools-tab')" id="btn-tools-tab" type="button" class="tab-btn px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 transition-all cursor-pointer">
                 <i class="fas fa-tools"></i> <span data-ar="أدوات المطورين والخدمات" data-en="Developer Utilities">أدوات المطورين والخدمات</span>
@@ -383,11 +453,11 @@ foreach ($projects as $p) {
 
                 <div class="bg-white dark:bg-[#131d33] border border-slate-200 dark:border-white/5 rounded-3xl p-6 shadow-xl flex items-center justify-between">
                     <div>
-                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-1">حالة تطبيق الـ PWA</span>
-                        <span class="text-base font-bold text-emerald-600 dark:text-emerald-400 block">شغال ومفعل 📲</span>
+                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-1">حالة رفع الصور والـ PWA</span>
+                        <span class="text-base font-bold text-emerald-600 dark:text-emerald-400 block">مفعل 100% 📲</span>
                     </div>
                     <div class="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center text-xl">
-                        <i class="fas fa-mobile-alt"></i>
+                        <i class="fas fa-[#009688] fa-cloud-upload-alt"></i>
                     </div>
                 </div>
             </div>
@@ -399,16 +469,16 @@ foreach ($projects as $p) {
                 </h3>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 font-sans text-xs">
                     <button onclick="switchTab('projects-tab')" type="button" class="p-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl text-right hover:border-teal-500 transition-all cursor-pointer">
-                        <span class="font-bold text-slate-900 dark:text-white block mb-1">➕ إضافة مشروع مؤسسي جديد</span>
-                        <span class="text-slate-500 dark:text-slate-400">إضافة مشروع جديد للمعرض مع الصور والروابط.</span>
+                        <span class="font-bold text-slate-900 dark:text-white block mb-1">➕ إضافة مشروع مؤسسي جديد مع الصورة</span>
+                        <span class="text-slate-500 dark:text-slate-400">رفع صورة المشروع وحفظ التفاصيل في داتا بيز.</span>
                     </button>
                     <button onclick="switchTab('profile-tab')" type="button" class="p-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl text-right hover:border-teal-500 transition-all cursor-pointer">
-                        <span class="font-bold text-slate-900 dark:text-white block mb-1">👤 تعديل بيانات البروفايل والتواصل</span>
-                        <span class="text-slate-500 dark:text-slate-400">تحديث اسم المهندس، المسمى، الإيميل والهاتف.</span>
+                        <span class="font-bold text-slate-900 dark:text-white block mb-1">👤 رفع الصورة الشخصية وتعديل البيانات</span>
+                        <span class="text-slate-500 dark:text-slate-400">تحديث اسم المهندس، المسمى والصورة الشخصية.</span>
                     </button>
                     <button onclick="switchTab('articles-tab')" type="button" class="p-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl text-right hover:border-teal-500 transition-all cursor-pointer">
-                        <span class="font-bold text-slate-900 dark:text-white block mb-1">📝 نشر مقال أو بحث برمجي</span>
-                        <span class="text-slate-500 dark:text-slate-400">كتابة ونشر المقالات التقنية بمكتبة المنصة.</span>
+                        <span class="font-bold text-slate-900 dark:text-white block mb-1">📝 نشر مقال أو بحث مع غلاف المقال</span>
+                        <span class="text-slate-500 dark:text-slate-400">رفع صورة المقال والنشر في المكتبة.</span>
                     </button>
                 </div>
             </div>
@@ -428,7 +498,7 @@ foreach ($projects as $p) {
                     <?php endif; ?>
                 </div>
 
-                <form method="POST" action="admin.php" class="space-y-6">
+                <form method="POST" action="admin.php" enctype="multipart/form-data" class="space-y-6">
                     <?php if ($edit_project): ?>
                         <input type="hidden" name="project_id" value="<?php echo $edit_project['id']; ?>">
                     <?php endif; ?>
@@ -464,8 +534,9 @@ foreach ($projects as $p) {
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-700 dark:text-slate-300">رابط الصور أو الميديا</label>
-                            <input type="text" name="project_media" class="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-[#0b1120] border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500" placeholder="public/assets/images/badimalika.jpg" value="<?php echo htmlspecialchars($edit_project['project_media'] ?? ''); ?>">
+                            <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-700 dark:text-slate-300">رفع صورة المشروع من جهازك 🖼️</label>
+                            <input type="file" name="project_media_file" accept="image/*" class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#0b1120] border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs">
+                            <input type="text" name="project_media" class="w-full p-2 mt-2 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-600 dark:text-slate-400 text-xs" placeholder="أو اكتب رابط الصورة المباشر: assets/images/badimalika.jpg" value="<?php echo htmlspecialchars($edit_project['project_media'] ?? ''); ?>">
                         </div>
 
                         <div>
@@ -481,7 +552,7 @@ foreach ($projects as $p) {
                     </div>
 
                     <button type="submit" name="project_submit" class="px-8 py-3.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-teal-600/30 transition-all cursor-pointer">
-                        <i class="fas fa-save"></i> <?php echo $edit_project ? 'حفظ التعديلات' : 'إضافة المشروع الآن'; ?>
+                        <i class="fas fa-save"></i> <?php echo $edit_project ? 'حفظ التعديلات والصورة' : 'إضافة المشروع والصورة الآن'; ?>
                     </button>
                 </form>
             </div>
@@ -549,10 +620,10 @@ foreach ($projects as $p) {
         <div id="profile-tab" class="hidden space-y-8">
             <div class="bg-white dark:bg-[#131d33] border border-slate-200 dark:border-white/5 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
                 <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-white/10 pb-4">
-                    <i class="fas fa-id-card text-teal-600"></i> تعديل المعلومات الشخصية وبيانات صاحب المنصة
+                    <i class="fas fa-id-card text-teal-600"></i> تعديل المعلومات الشخصية والصورة الشخصية
                 </h2>
 
-                <form method="POST" action="admin.php" class="space-y-6">
+                <form method="POST" action="admin.php" enctype="multipart/form-data" class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                         <div>
@@ -576,6 +647,16 @@ foreach ($projects as $p) {
                         </div>
 
                         <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-700 dark:text-slate-300">رفع صورة البروفايل الشخصية 👤</label>
+                            <input type="file" name="profile_avatar" accept="image/*" class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#0b1120] border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-700 dark:text-slate-300">رفع صورة خلفية الـ Hero 🌄</label>
+                            <input type="file" name="hero_bg" accept="image/*" class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#0b1120] border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs">
+                        </div>
+
+                        <div>
                             <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-700 dark:text-slate-300">البريد الإلكتروني</label>
                             <input type="email" name="settings[site_email]" class="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-[#0b1120] border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm" value="<?php echo htmlspecialchars($settings['site_email'] ?? 'boubakarseddikh@gmail.com'); ?>">
                         </div>
@@ -592,13 +673,13 @@ foreach ($projects as $p) {
 
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-700 dark:text-slate-300">رابط LinkedIn</label>
-                            <input type="text" name="settings[site_linkedin]" class="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-[#0b1120] border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm" value="<?php echo htmlspecialchars($settings['site_linkedin'] ?? 'https://www.linkedin.com/in/hamza-boubakare-seddike'); ?>">
+                            <input type="text" name="settings[site_linkedin]" class="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-[#0b1120] border border-slate-700 text-slate-900 dark:text-white text-sm" value="<?php echo htmlspecialchars($settings['site_linkedin'] ?? 'https://www.linkedin.com/in/hamza-boubakare-seddike'); ?>">
                         </div>
 
                     </div>
 
                     <button type="submit" name="settings_submit" class="px-8 py-3.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm rounded-xl shadow-lg transition-all cursor-pointer">
-                        <i class="fas fa-save"></i> حفظ المعلومات الشخصية
+                        <i class="fas fa-save"></i> حفظ المعلومات والصور الشخصية
                     </button>
                 </form>
             </div>
@@ -614,7 +695,7 @@ foreach ($projects as $p) {
                     </h2>
                 </div>
 
-                <form method="POST" action="admin.php" class="space-y-6">
+                <form method="POST" action="admin.php" enctype="multipart/form-data" class="space-y-6">
                     <?php if ($edit_article): ?>
                         <input type="hidden" name="article_id" value="<?php echo $edit_article['id']; ?>">
                     <?php endif; ?>
@@ -631,6 +712,12 @@ foreach ($projects as $p) {
                             <input type="date" name="art_date" class="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-[#0b1120] border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm" value="<?php echo $edit_article['publish_date'] ?? date('Y-m-d'); ?>">
                         </div>
 
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-700 dark:text-slate-300">رفع غلاف / صورة المقال 📰</label>
+                            <input type="file" name="art_image_file" accept="image/*" class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#0b1120] border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs">
+                            <input type="text" name="art_image_url" class="w-full p-2 mt-2 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-600 dark:text-slate-400 text-xs" placeholder="أو رابط الصورة المباشر: assets/images/marigold.jpg" value="<?php echo htmlspecialchars($edit_article['media_image'] ?? ''); ?>">
+                        </div>
+
                         <div class="md:col-span-2">
                             <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-700 dark:text-slate-300">ملخص المقال *</label>
                             <textarea name="art_summary" rows="3" required class="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-[#0b1120] border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm" placeholder="ملخص سريع لموضوع البحث..."><?php echo htmlspecialchars($edit_article['summary'] ?? ''); ?></textarea>
@@ -639,7 +726,7 @@ foreach ($projects as $p) {
                     </div>
 
                     <button type="submit" name="article_submit" class="px-8 py-3.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm rounded-xl shadow-lg transition-all cursor-pointer">
-                        <i class="fas fa-save"></i> <?php echo $edit_article ? 'حفظ المقال' : 'نشر المقال الجديد'; ?>
+                        <i class="fas fa-save"></i> <?php echo $edit_article ? 'حفظ المقال والصورة' : 'نشر المقال والصورة الجديدة'; ?>
                     </button>
                 </form>
             </div>
@@ -698,25 +785,25 @@ foreach ($projects as $p) {
                     <div class="p-5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl">
                         <h3 class="font-bold text-slate-900 dark:text-white text-base mb-1">1. محول الأكواد بـ UTF-8</h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">تحويل النصوص وترميز JSON و Base64 بكل سهولة.</p>
-                        <a href="../tools/php_converter.php" target="_blank" class="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline">تجربة الأداة &larr;</a>
+                        <a href="tools/php_converter.php" target="_blank" class="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline">تجربة الأداة &larr;</a>
                     </div>
 
                     <div class="p-5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl">
                         <h3 class="font-bold text-slate-900 dark:text-white text-base mb-1">2. منسق أكواد PHP & Laravel</h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">أداة تنظيف وتنسيق الأكواد وفق PSR-12.</p>
-                        <a href="../tools/php_writer.php" target="_blank" class="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline">تجربة الأداة &larr;</a>
+                        <a href="tools/php_writer.php" target="_blank" class="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline">تجربة الأداة &larr;</a>
                     </div>
 
-                    <div class="p-5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                    <div class="p-5 bg-slate-50 dark:bg-slate-900/60 border border-slate-800 rounded-2xl">
                         <h3 class="font-bold text-slate-900 dark:text-white text-base mb-1">3. خارطة طريق هندسة البرمجيات (2026)</h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">المنهج الكامل لبناء أنظمة الـ ERP والـ Microservices.</p>
-                        <a href="../tools/php_syllabus.php" target="_blank" class="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline">عرض المنهاج &larr;</a>
+                        <a href="tools/php_syllabus.php" target="_blank" class="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline">عرض المنهاج &larr;</a>
                     </div>
 
                     <div class="p-5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl">
                         <h3 class="font-bold text-slate-900 dark:text-white text-base mb-1">4. المحاكي الرقمي لنظام OMR</h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">نظام تصحيح وتقييم الإجابات الرقمية لمسابقات WSAP.</p>
-                        <a href="../tools/omr_evaluator.php" target="_blank" class="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline">تجربة المحاكي &larr;</a>
+                        <a href="tools/omr_evaluator.php" target="_blank" class="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline">تجربة المحاكي &larr;</a>
                     </div>
                 </div>
             </div>
