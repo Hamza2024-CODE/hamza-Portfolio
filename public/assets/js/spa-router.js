@@ -86,8 +86,13 @@
         })
         .then(response => {
             if (!response.ok) throw new Error(`HTTP status ${response.status}`);
-            const title = response.headers.get('X-SPA-Title') || document.title;
-            return response.text().then(html => ({ html, title }));
+            return response.text().then(htmlText => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, 'text/html');
+                const newContainer = doc.getElementById('spa-container') || doc.querySelector('main') || doc.body;
+                const title = response.headers.get('X-SPA-Title') || doc.title || document.title;
+                return { html: newContainer ? newContainer.innerHTML : htmlText, title };
+            });
         })
         .catch(err => {
             console.warn(`[SPA Router] Prefetch failed for ${cleanUrl}:`, err);
