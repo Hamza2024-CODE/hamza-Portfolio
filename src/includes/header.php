@@ -352,14 +352,14 @@ if ($is_spa) {
 
         <!-- Header Component -->
         <header id="main-header"
-            class="fixed top-6 left-0 right-0 w-full lg:left-12 lg:right-12 lg:w-auto px-4 sm:px-8 lg:px-16 transition-all duration-300 ease-in-out z-50">
+            class="fixed top-3 sm:top-6 left-0 right-0 w-full lg:left-12 lg:right-12 lg:w-auto px-2 sm:px-8 lg:px-16 transition-all duration-300 ease-in-out z-50">
 
-            <div class="max-w-6xl mx-auto flex items-center justify-between h-16">
+            <div class="max-w-6xl mx-auto flex items-center justify-between h-14 sm:h-16 px-1 sm:px-4">
 
                 <!-- Logo pill -->
-                <div id="logo-pill" class="flex-shrink-0 flex items-center rounded-full px-5 py-2">
+                <div id="logo-pill" class="flex-shrink flex items-center rounded-full px-2 sm:px-5 py-1.5 sm:py-2 min-w-0">
                     <a href="" data-ar="<?php echo htmlspecialchars($site_name_ar); ?>" data-en="<?php echo htmlspecialchars($site_name_en); ?>"
-                        class="font-headline font-bold text-gray-900 dark:text-white text-base sm:text-lg tracking-wide transition-colors">
+                        class="font-headline font-bold text-gray-900 dark:text-white text-sm sm:text-lg tracking-tight sm:tracking-wide truncate transition-colors">
                         <?php echo htmlspecialchars($site_name_ar); ?>
                     </a>
                 </div>
@@ -382,36 +382,36 @@ if ($is_spa) {
 
                 <!-- Right Element: Floating Rounded Pill for Language & Theme Toggler -->
                 <div
-                    class="flex items-center space-x-2 rtl:space-x-reverse bg-white/40 dark:bg-neutral-900/40 backdrop-blur-md border border-gray-200/40 dark:border-neutral-800/40 shadow-md rounded-full p-1.5 transition-colors duration-300">
+                    class="flex items-center space-x-1 sm:space-x-2 rtl:space-x-reverse bg-white/40 dark:bg-neutral-900/40 backdrop-blur-md border border-gray-200/40 dark:border-neutral-800/40 shadow-md rounded-full p-1 sm:p-1.5 transition-colors duration-300 flex-shrink-0">
                     
                     <!-- PWA Install Button -->
                     <button id="pwa-install-btn" onclick="installPWA()" type="button"
-                        class="flex items-center gap-1 text-xs font-bold text-teal-800 dark:text-teal-300 hover:bg-teal-600 hover:text-white px-3 py-1.5 rounded-full transition-all bg-teal-50 dark:bg-teal-900/40 border border-teal-200 dark:border-teal-700/50 shadow-sm" title="تثبيت التطبيق على الجهاز">
+                        class="flex items-center gap-1 text-xs font-bold text-teal-800 dark:text-teal-300 hover:bg-teal-600 hover:text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-full transition-all bg-teal-50 dark:bg-teal-900/40 border border-teal-200 dark:border-teal-700/50 shadow-sm" title="تثبيت التطبيق على الجهاز">
                         <i class="fas fa-mobile-alt text-teal-600"></i>
-                        <span data-ar="تثبيت" data-en="Install">تثبيت</span>
+                        <span class="hidden sm:inline" data-ar="تثبيت" data-en="Install">تثبيت</span>
                     </button>
 
                     <!-- Language Toggle Button -->
                     <button id="lang-toggle-btn" onclick="toggleLanguage()" type="button"
-                        class="flex items-center gap-1 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 px-3 py-1.5 rounded-full transition-all bg-white/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50">
+                        class="flex items-center gap-1 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full transition-all bg-white/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50">
                         <i class="fas fa-globe text-teal-600"></i>
                         <span id="lang-btn-text">العربية</span>
                     </button>
 
                     <button id="theme-toggle" onclick="toggleTheme()" type="button"
-                        class="text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-neutral-800/60 focus:outline-none rounded-full text-sm p-2 transition-all"
+                        class="text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-neutral-800/60 focus:outline-none rounded-full text-sm p-1.5 sm:p-2 transition-all"
                         aria-label="Toggle theme">
-                        <svg id="theme-toggle-sun-icon" class="hidden h-5 w-5 fill-current" viewBox="0 0 20 20" xmlns="http://w3.org">
+                        <svg id="theme-toggle-sun-icon" class="hidden h-4 w-4 sm:h-5 sm:w-5 fill-current text-amber-400" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                             <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 2.293a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zm4 4.707a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM16.121 14.707a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zM10 14a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.707-1.293a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm2.293-4.707a1 1 0 011.414-1.414l.707.707a1 1 0 01-1.414 1.414l-.707-.707zM10 5a5 5 0 100 10 5 5 0 000-10z"></path>
                         </svg>
-                        <svg id="theme-toggle-moon-icon" class="hidden h-5 w-5 fill-current" viewBox="0 0 20 20" xmlns="http://w3.org">
+                        <svg id="theme-toggle-moon-icon" class="hidden h-4 w-4 sm:h-5 sm:w-5 fill-current text-slate-700 dark:text-slate-300" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                             <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
                         </svg>
                     </button>
                     <!-- Mobile Hamburger Button -->
                     <div class="md:hidden flex items-center">
                         <button id="mobile-menu-btn"
-                            class="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none rounded-full p-2 transition-colors">
+                            class="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none rounded-full p-1.5 transition-colors">
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                             </svg>

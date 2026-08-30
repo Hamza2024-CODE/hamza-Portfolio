@@ -1,0 +1,50 @@
+/* Custom Production CSS for Hamza Boubakar Seddik Portfolio */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&family=Alexandria:wght@300;400;600;700;800;900&display=swap');
+
+:root {
+  --color-brand-primary: #009688;
+  --color-brand-dark: #0F172A;
+}
+
+html[dir="rtl"] body {
+  font-family: 'Cairo', 'Alexandria', sans-serif !important;
+}
+
+/* Mobile responsive header tweaks */
+@media (max-width: 640px) {
+  #main-header {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+  #main-header .max-w-6xl {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+  #logo-pill {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+  #logo-pill a {
+    font-size: 0.95rem !important;
+  }
+}
+
+/* Glassmorphism Navigation */
+.glass-header {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.dark .glass-header {
+  background: rgba(13, 21, 39, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Smooth Transitions */
+* {
+  transition-property: color, background-color, border-color, transform, opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}

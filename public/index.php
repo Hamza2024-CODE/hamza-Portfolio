@@ -108,22 +108,22 @@ html.dark .portfolio-bg-layer::before {
 
 <!-- Hero Section -->
 <section
-class="col-span-full relative w-full h-auto md:min-h-screen flex items-center bg-white dark:bg-[#0d1527] text-slate-900 dark:text-white box-border pt-32 pb-16 md:py-0 transition-colors duration-300">
+class="col-span-full relative w-full h-auto md:min-h-screen flex items-center bg-white dark:bg-[#0d1527] text-slate-900 dark:text-white box-border pt-24 sm:pt-32 pb-12 sm:pb-16 md:py-0 transition-colors duration-300">
 <div class="portfolio-bg-layer absolute inset-0 pointer-events-none z-0"></div>
 <div
-class="relative z-20 w-full px-6 sm:px-12 md:px-16 lg:px-20 max-w-[1320px] mx-auto flex items-center box-border">
+class="relative z-20 w-full px-4 sm:px-12 md:px-16 lg:px-20 max-w-[1320px] mx-auto flex items-center box-border">
 <div class="w-full max-w-[680px] text-left rtl:text-right flex flex-col items-start box-border m-0">
 <div
-class="font-sans bg-teal-50 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-700/50 text-teal-800 dark:text-teal-300 px-4 py-2 sm:px-5 sm:py-2.5 rounded-[30px] text-xs sm:text-[0.95rem] font-semibold mb-5 sm:mb-6 tracking-wide transition-all duration-300"
+class="font-sans bg-teal-50 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-700/50 text-teal-800 dark:text-teal-300 px-3.5 py-1.5 sm:px-5 sm:py-2.5 rounded-[30px] text-xs sm:text-[0.95rem] font-semibold mb-4 sm:mb-6 tracking-wide transition-all duration-300"
 data-ar="👋 مرحباً، أنا" data-en="👋 Hello, I'm">
 👋 مرحباً، أنا
 </div>
 <h1
-class="font-sans text-4xl sm:text-5xl md:text-[3.8rem] font-bold leading-[1.15] m-0 mb-5 sm:mb-6 tracking-tight w-full box-border">
+class="font-sans text-3xl sm:text-5xl md:text-[3.8rem] font-bold leading-[1.2] sm:leading-[1.15] m-0 mb-4 sm:mb-6 tracking-tight w-full box-border">
 <span data-ar="<?php echo htmlspecialchars($site_name_ar); ?>" data-en="<?php echo htmlspecialchars($site_name_en); ?>"><?php echo htmlspecialchars($site_name_ar); ?></span><br>
-<span class="text-teal-600 dark:text-teal-400 whitespace-normal md:whitespace-nowrap" data-ar="<?php echo htmlspecialchars($site_title_ar); ?>" data-en="<?php echo htmlspecialchars($site_title_en); ?>"><?php echo htmlspecialchars($site_title_ar); ?></span><br>
+<span class="text-teal-600 dark:text-teal-400 text-2xl sm:text-5xl md:text-[3.8rem] block mt-1" data-ar="<?php echo htmlspecialchars($site_title_ar); ?>" data-en="<?php echo htmlspecialchars($site_title_en); ?>"><?php echo htmlspecialchars($site_title_ar); ?></span><br>
 <span
-class="text-lg sm:text-2xl md:text-[2.2rem] font-medium text-slate-500 dark:text-slate-300 transition-colors duration-300" data-ar="<?php echo htmlspecialchars($site_institution_ar); ?>" data-en="<?php echo htmlspecialchars($site_institution_en); ?>"><?php echo htmlspecialchars($site_institution_ar); ?></span>
+class="text-base sm:text-2xl md:text-[2.2rem] font-medium text-slate-500 dark:text-slate-300 transition-colors duration-300 block mt-1" data-ar="<?php echo htmlspecialchars($site_institution_ar); ?>" data-en="<?php echo htmlspecialchars($site_institution_en); ?>"><?php echo htmlspecialchars($site_institution_ar); ?></span>
 </h1>
 <p
 class="font-body text-sm sm:text-[1.15rem] text-slate-600 dark:text-slate-400 leading-relaxed m-0 mb-6 sm:mb-8 max-w-[620px] transition-colors duration-300" data-ar="متخصص في بناء الأنظمة الرقمية المؤسسية، تطبيقات الـ ERP، والحلول البرمجية عالية الأداء بخبرة 7+ سنوات في التطوير البرمجي." data-en="Specialized in building end-to-end digital systems, enterprise applications, ERPs, and scalable multi-platform platforms with 7+ years of professional engineering experience.">
