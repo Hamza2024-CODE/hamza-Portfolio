@@ -215,13 +215,10 @@ if ($is_spa) {
             document.addEventListener('DOMContentLoaded', updateThemeIcons);
         </script>
 
-        <!-- Tailwind CSS Fallback & Custom Styles -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" crossorigin="anonymous">
-        <link rel="stylesheet" href="<?php echo $base_path; ?>assets/css/style.css?v=2.5">
-        <link rel="stylesheet" href="<?php echo $base_path; ?>public/assets/css/style.css?v=2.5">
-        <link rel="stylesheet" href="assets/css/style.css?v=2.5">
-        <link rel="stylesheet" href="public/assets/css/style.css?v=2.5">
+        <!-- Tailwind CSS & Custom Styles -->
         <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="<?php echo $base_path; ?>assets/css/style.css?v=2.6">
+        <link rel="stylesheet" href="<?php echo $base_path; ?>public/assets/css/style.css?v=2.6">
 
         <!-- Custom Tailwind Configuration -->
         <script>
