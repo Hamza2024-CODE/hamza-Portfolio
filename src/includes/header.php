@@ -15,12 +15,46 @@ if (($pos = strpos($base_path, '/public')) !== false) {
 // Ensure the path always ends with a single trailing slash
 $base_path = rtrim($base_path, '/') . '/';
 
-// Ensure database connectivity for dynamic settings
+// Ensure database connectivity for dynamic settings & visitor tracking
 if (!isset($pdo)) {
     $db_config_file = __DIR__ . '/../../config/dbconfig.php';
     if (file_exists($db_config_file)) {
         require_once $db_config_file;
     }
+}
+
+// Visitor Analytics Tracking Helper
+try {
+    if (isset($pdo) && !isset($_SESSION['visitor_logged_session'])) {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        if ($ip === '::1') $ip = '127.0.0.1';
+        $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $page = $_SERVER['REQUEST_URI'] ?? '/';
+        
+        $device = 'Desktop';
+        if (preg_match('/(android|bb\d+|meego).+mobile|avail|blackberry|emulator|iphone|ipod|sm-b|mobi|mini|mobile/i', $ua)) {
+            $device = 'Mobile';
+        } elseif (preg_match('/(ipad|tablet|playbook|silk)/i', $ua)) {
+            $device = 'Tablet';
+        }
+        
+        $os = 'Linux';
+        if (strpos($ua, 'Windows') !== false) $os = 'Windows';
+        elseif (strpos($ua, 'Macintosh') !== false) $os = 'macOS';
+        elseif (strpos($ua, 'iPhone') !== false || strpos($ua, 'iPad') !== false) $os = 'iOS';
+        elseif (strpos($ua, 'Android') !== false) $os = 'Android';
+        
+        $browser = 'Chrome';
+        if (strpos($ua, 'Firefox') !== false) $browser = 'Firefox';
+        elseif (strpos($ua, 'Safari') !== false && strpos($ua, 'Chrome') === false) $browser = 'Safari';
+        elseif (strpos($ua, 'Edg') !== false) $browser = 'Edge';
+
+        $stmt = $pdo->prepare("INSERT INTO visitor_logs (ip_address, user_agent, device_type, browser, os, page_visited) VALUES (:ip, :ua, :dev, :br, :os, :pg)");
+        $stmt->execute([':ip' => $ip, ':ua' => substr($ua, 0, 250), ':dev' => $device, ':br' => $browser, ':os' => $os, ':pg' => substr($page, 0, 250)]);
+        $_SESSION['visitor_logged_session'] = true;
+    }
+} catch (Exception $e) {
+    // Ignore logging errors
 }
 
 $site_settings = [];
