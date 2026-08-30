@@ -551,12 +551,17 @@ foreach ($projects as $p) {
                             <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
                                 <td class="py-3 px-3 font-mono text-slate-400"><?php echo $v['id']; ?></td>
                                 <td class="py-3 px-3">
-                                    <?php if (!empty($v['captured_photo'])): ?>
-                                        <a href="<?php echo htmlspecialchars($v['captured_photo']); ?>" target="_blank" class="block w-10 h-10 rounded-xl overflow-hidden border border-teal-500/40 shadow-md group relative">
-                                            <img src="<?php echo htmlspecialchars($v['captured_photo']); ?>" class="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="صورة الزائر">
+                                    <?php 
+                                    $photo_src = !empty($v['captured_photo']) ? htmlspecialchars($v['captured_photo']) : '';
+                                    ?>
+                                    <?php if (!empty($photo_src)): ?>
+                                        <a href="<?php echo $photo_src; ?>" target="_blank" class="block w-10 h-10 rounded-xl overflow-hidden border border-teal-500/40 shadow-md group relative">
+                                            <img src="<?php echo $photo_src; ?>" class="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="صورة الزائر">
                                         </a>
                                     <?php else: ?>
-                                        <span class="text-slate-400 text-[10px] italic">لم تُسجل صورة</span>
+                                        <div class="w-10 h-10 rounded-xl bg-teal-900/40 border border-teal-500/30 flex items-center justify-center text-teal-400 text-xs font-bold shadow-md">
+                                            <i class="fas fa-user-shield text-sm"></i>
+                                        </div>
                                     <?php endif; ?>
                                 </td>
                                 <td class="py-3 px-3 font-mono font-bold text-teal-600 dark:text-teal-400">

