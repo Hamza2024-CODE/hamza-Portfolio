@@ -215,6 +215,9 @@ if ($is_spa) {
             document.addEventListener('DOMContentLoaded', updateThemeIcons);
         </script>
 
+        <!-- Tailwind CSS Fallback & Custom Styles -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+        <link rel="stylesheet" href="assets/css/style.css">
         <script src="https://cdn.tailwindcss.com"></script>
 
         <!-- Custom Tailwind Configuration -->
