@@ -11,7 +11,7 @@ RewriteRule ^ - [L]
 
 # Explicit Service Worker, Manifest, and Assets
 RewriteRule ^sw\.js$ public/sw.js [L]
-RewriteRule ^manifest\.json$ public/manifest.json [L]
+RewriteRule ^manifest\.json$ public/manifest.php [L]
 RewriteRule ^assets/(.*)$ public/assets/$1 [L]
 
 # Clean URL Routing
