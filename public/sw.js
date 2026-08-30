@@ -28,6 +28,14 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   
+  // Ignore non-http/https schemes (e.g. chrome-extension://, moz-extension://)
+  try {
+    const url = new URL(event.request.url);
+    if (!url.protocol.startsWith('http')) return;
+  } catch (e) {
+    return;
+  }
+
   // Stale-while-revalidate strategy for GET requests
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {

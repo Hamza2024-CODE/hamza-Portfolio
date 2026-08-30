@@ -453,41 +453,13 @@ if ($is_spa) {
                     const logoPill = document.getElementById('logo-pill');
 
                     // Theme Icon Setup Logic
-                    if (document.documentElement.classList.contains('dark')) {
-                        if (themeToggleLightIcon) themeToggleLightIcon.classList.remove('hidden');
-                        if (themeToggleDarkIcon) themeToggleDarkIcon.classList.add('hidden');
-                    } else {
-                        if (themeToggleDarkIcon) themeToggleDarkIcon.classList.remove('hidden');
-                        if (themeToggleLightIcon) themeToggleLightIcon.classList.add('hidden');
-                    }
+                    updateThemeIcons();
 
-                    // Click Logic for theme alterations
-                    if (themeToggleBtn) {
-                        // Prevent piling up duplicate event listeners during AJAX re-injection
-                        themeToggleBtn.replaceWith(themeToggleBtn.cloneNode(true));
-                        const newThemeBtn = document.getElementById('theme-toggle');
-
-                        newThemeBtn.addEventListener('click', () => {
-                            if (document.documentElement.classList.contains('dark')) {
-                                document.documentElement.classList.remove('dark');
-                                localStorage.setItem('color-theme', 'light');
-                                document.getElementById('theme-toggle-moon-icon').classList.remove('hidden');
-                                document.getElementById('theme-toggle-sun-icon').classList.add('hidden');
-                            } else {
-                                document.documentElement.classList.add('dark');
-                                localStorage.setItem('color-theme', 'dark');
-                                document.getElementById('theme-toggle-sun-icon').classList.remove('hidden');
-                                document.getElementById('theme-toggle-moon-icon').classList.add('hidden');
-                            }
-                        });
-                    }
-
-                    // Drawer Menu Action Controllers
+                    // Mobile Menu Toggle
                     if (mobileMenuBtn && mobileMenu) {
-                        mobileMenuBtn.replaceWith(mobileMenuBtn.cloneNode(true));
-                        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
-                            document.getElementById('mobile-menu').classList.toggle('hidden');
-                        });
+                        mobileMenuBtn.onclick = function() {
+                            mobileMenu.classList.toggle('hidden');
+                        };
                     }
                 }
 
