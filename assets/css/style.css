@@ -1,0 +1,66 @@
+/* Universal Fallback & Layout CSS System for Production Hosting */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&family=Alexandria:wght@300;400;600;700;800;900&display=swap');
+
+:root {
+  --brand-primary: #009688;
+  --brand-primary-hover: #00796b;
+  --bg-dark: #0d1527;
+  --bg-light: #ffffff;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Cairo', 'Alexandria', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  box-sizing: border-box;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+/* Core Container Bounds */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Dark Mode Defaults */
+html.dark body {
+  background-color: var(--bg-dark) !important;
+  color: #f8fafc !important;
+}
+
+html:not(.dark) body {
+  background-color: var(--bg-light) !important;
+  color: #0f172a !important;
+}
+
+/* Layout Grid System */
+.grid {
+  display: grid;
+}
+
+.flex {
+  display: flex;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Button & Link Styles */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* Smooth Transitions */
+.transition-all {
+  transition: all 0.3s ease-in-out;
+}
