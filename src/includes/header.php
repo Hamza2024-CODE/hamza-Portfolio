@@ -280,7 +280,15 @@ if ($is_spa) {
         <script src="assets/js/spa-router.js" defer></script>
 
         <!-- PWA Manifest & Meta Tags -->
-        <link rel="manifest" href="<?php echo $base_path; ?>manifest.json">
+        <?php
+        $raw_manifest = file_exists(__DIR__ . '/../../public/manifest.json') ? file_get_contents(__DIR__ . '/../../public/manifest.json') : (file_exists(__DIR__ . '/../../manifest.json') ? file_get_contents(__DIR__ . '/../../manifest.json') : '');
+        if (!empty($raw_manifest)) {
+            $manifest_data_uri = 'data:application/manifest+json;charset=utf-8,' . rawurlencode($raw_manifest);
+        } else {
+            $manifest_data_uri = $base_path . 'manifest.json';
+        }
+        ?>
+        <link rel="manifest" href="<?php echo $manifest_data_uri; ?>">
         <meta name="theme-color" content="#009688">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
