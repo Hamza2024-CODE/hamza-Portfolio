@@ -1,13 +1,11 @@
-Options +FollowSymLinks -Indexes
 RewriteEngine On
 
-# Disable Apache's automatic physical trailing slash redirects for directories
-DirectorySlash Off
-
-# Route PWA, assets, and clean URLs
+# Route PWA manifest, service worker, and static assets
 RewriteRule ^sw\.js$ public/sw.js [L]
 RewriteRule ^manifest\.json$ public/manifest.json [L]
 RewriteRule ^assets/(.*)$ public/assets/$1 [L]
+
+# Route Clean URLs
 RewriteRule ^admin/?$ public/admin.php [L,QSA]
 RewriteRule ^admin\.php$ public/admin.php [L,QSA]
 RewriteRule ^about/?$ public/about.php [L,QSA]
@@ -21,7 +19,7 @@ RewriteRule ^tools/php_syllabus/?$ public/tools/php_syllabus.php [L,QSA]
 RewriteRule ^tools/omr_evaluator/?$ public/tools/omr_evaluator.php [L,QSA]
 RewriteRule ^tools/(.*)$ public/tools/$1 [L,QSA]
 
-# Fallback to public/index.php if file/dir does not exist
+# Fallback for routing clean request paths
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ public/index.php [L,QSA]
