@@ -1,9 +1,12 @@
 RewriteEngine On
 
-# Route PWA manifest, service worker, and static assets
+# Universal Asset Rewriting for hosting compatibility
+RewriteRule ^assets/(.*)$ public/assets/$1 [L]
+RewriteRule ^public/assets/(.*)$ public/assets/$1 [L]
+
+# Route PWA manifest and service worker
 RewriteRule ^sw\.js$ public/sw.js [L]
 RewriteRule ^manifest\.json$ public/manifest.json [L]
-RewriteRule ^assets/(.*)$ public/assets/$1 [L]
 
 # Route Clean URLs
 RewriteRule ^admin/?$ public/admin.php [L,QSA]

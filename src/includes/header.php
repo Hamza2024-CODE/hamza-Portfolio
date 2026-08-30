@@ -3,17 +3,12 @@
 $current_page = basename($_SERVER['PHP_SELF']);
 
 // Calculate dynamic base path to support both subdirectories (XAMPP) and production domain root
-
-// Calculate dynamic base path to support both subdirectories (XAMPP) and production domain root
-$base_path = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
-
-// Strip out the '/public' directory and anything after it to get the true application root
-if (($pos = strpos($base_path, '/public')) !== false) {
-    $base_path = substr($base_path, 0, $pos);
+$script_name = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '/index.php');
+$base_dir = str_replace('\\', '/', dirname($script_name));
+if (($pos = strpos($base_dir, '/public')) !== false) {
+    $base_dir = substr($base_dir, 0, $pos);
 }
-
-// Ensure the path always ends with a single trailing slash
-$base_path = rtrim($base_path, '/') . '/';
+$base_path = ($base_dir === '' || $base_dir === '.' || $base_dir === '/') ? '/' : rtrim($base_dir, '/') . '/';
 
 // Ensure database connectivity for dynamic settings
 if (!isset($pdo)) {
